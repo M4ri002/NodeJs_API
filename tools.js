@@ -39,6 +39,27 @@ function expireDate() {
 
 }
 
+function validateData(name, surname, password, mail) {
+    const nameSurnameRegex = /^[a-zA-Z]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!nameSurnameRegex.test(name) || !nameSurnameRegex.test(surname)) {
+        return 1;
+    }
+
+    if (password.length < 4) {
+        return 2;
+    }
+
+    if (!emailRegex.test(mail)) {
+        return 3;
+    }
+
+    return "200";
+}
+
+
+
 
 
 module.exports = {
@@ -46,4 +67,5 @@ module.exports = {
     generateSHA512Hash,
     exactDate,
     expireDate,
+    validateData,
 };

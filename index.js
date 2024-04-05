@@ -46,19 +46,39 @@ app.post('/register', (req, res) => {
         return;
     }
     userController.createUser(name, surname, password, mail, (error, results) => {
-        if (error) {
-            console.error('Error en la consulta SQL:', error);
-            res.status(500).send({ error: 'Error en la consulta SQL. Puede que la base de datos no esté disponible' });
-            return;
+        console.log(results);
+        if (results == 1 || results == 2 || results == 3) {
+            console.log("dentor");
+            switch (results) {
+                case 1:
+                    res.send({ message: 'Error! Tu nombre o apellidos no son validos' })
+                    break;
+                case 2:
+                    res.send({ message: 'Error! La contraseña no es valida, asegurate que tenga más de 4 digitos' })
+                    break;
+                case 3:
+                    res.send({ message: 'Error! El Email no contiene una sintaxis apropiada' })
+                    break;
+                default:
+                    break;
+            }
         }
-        if (results.affectedRows >= 1) {
+
+        else if (results.affectedRows >= 1) {
             // const username = results[0].name;
             // res.render('index', { username: username });
-            res.send({message: 'Insertado correctamente'})
-        } else if(results.affectedRows == 0) {
+            console.log("HE ENTRADO", results);
+            res.send({ message: 'Insertado correctamente' });
+        }
+        else if (results.affectedRows == 0) {
             res.status(401).send({ message: 'No se ha podido insertar' });
-        console.log(results);
-        console.log('El usuario no existe');
+            console.log(results);
+            console.log('El usuario no existe');
+        }
+        if (error) {
+            console.error('Error en la consulta SQL:', error);
+            res.status(500).send({ error: 'Error verifica que los datos son correctos' });
+            return;
         }
     });
 });
