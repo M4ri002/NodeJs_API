@@ -5,6 +5,11 @@ function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+function convertToLowercase(string) {
+    return string.toLowerCase();
+}
+
+
 function generateSHA512Hash(data) {
     const hash = crypto.createHash('sha512');
     hash.update(data);
@@ -68,4 +73,5 @@ module.exports = {
     exactDate,
     expireDate,
     validateData,
+    convertToLowercase,
 };

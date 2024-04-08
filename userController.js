@@ -1,5 +1,5 @@
 const mysql = require('mysql');
-const { generateSHA512Hash, exactDate, expireDate, validateData } = require('./tools.js')
+const { generateSHA512Hash, exactDate, expireDate, validateData, convertToLowercase } = require('./tools.js')
 
 // Crear la conexión a la base de datos
 const connection = mysql.createConnection({
@@ -15,13 +15,18 @@ const connection = mysql.createConnection({
 function findUser(mail, password, callback) {
     let query, params;
 
-    if (mail) {
+    if (mail && password) {
+        const lowerMail = convertToLowercase(mail);
+        const newPassword = generateSHA512Hash(lowerMail + password);
+        query = 'SELECT * FROM users WHERE mail = ? AND password = ? ';
+        params = [mail, newPassword];
+    } else if (mail) {
         query = 'SELECT * FROM users WHERE mail = ? ';
-        params = [mail, password];
+        params = [mail];
     }
 
     connection.query(query, params, callback);
-// Desencriptar el password para poder verificar el login
+    // Desencriptar el password para poder verificar el login
 }
 
 
@@ -41,11 +46,15 @@ function createUser(name, surname, password, mail, callback) {
             if (results.length > 0) {
                 return callback(false, 'El usuario ya existe');
             } else {
-                const newPassword = generateSHA512Hash(name + surname + password);
+                const lowerMail = convertToLowercase(mail);
+                const newPassword = generateSHA512Hash(lowerMail + password);
                 const hash = generateSHA512Hash(name + surname + password + exactDate());
                 const expire = expireDate();
 
-                connection.query('INSERT INTO users(name, surname, mail, password, hash, expire) VALUES (?, ?, ?, ?, ?, ?)', [name, surname, mail, newPassword, hash, expire], callback);
+                connection.query('INSERT INTO users(name, surname, mail, password, hash, expire) VALUES (?, ?, ?, ?, ?, ?)', [name, surname, lowerMail, newPassword, hash, expire], (error, results) => {
+                    // Devuelvo a cliente estos datos
+                    return callback(false, { hash: hash, affectedRows: results.affectedRows });
+                });
             }
         });
     }

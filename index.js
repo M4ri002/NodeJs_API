@@ -13,6 +13,21 @@ app.use(express.urlencoded({ extended: false }));
 app.listen(PORT, () => console.log(`http://localhost:${PORT} levantado`));
 
 app.get('/', (req, res) => res.sendFile(templatePath));
+app.get('/login', (req, res) => res.sendFile(__dirname + '/login.html'));
+app.get('/register', (req, res) => res.sendFile(__dirname + '/register.html'));
+app.get('/inicio', (req, res) => {
+    // const username = req.query.username;
+
+    // if (!username) {
+    //     res.status(400).send({ message: 'Nombre de usuario no proporcionado' });
+    //     return;
+    // }
+
+
+
+    res.render('hola');
+    // res.render('hola', { username: username });
+});
 
 app.post('/login', (req, res) => {
     const { mail, password } = req.body;
@@ -22,7 +37,8 @@ app.post('/login', (req, res) => {
         return;
     }
 
-    userController.findUser(mail, (error, results) => {
+    userController.findUser(mail, password, (error, results) => {
+
         if (error) {
             console.error('Error en la consulta SQL:', error);
             res.status(500).send({ error: 'Error en la consulta SQL. Puede que la base de datos no esté disponible' });
@@ -31,21 +47,22 @@ app.post('/login', (req, res) => {
 
         if (results.length > 0) {
             const username = results[0].name;
-            res.render('index', { username: username });
+            // res.redirect(`/inicio?username=${username}`);
+            res.redirect(`/inicio`);
+            // res.render('index', { username: username });
         } else {
             res.status(401).send({ message: 'Usuario no encontrado' });
-            console.log('El usuario no existe');
         }
     });
 });
 
 app.post('/register', (req, res) => {
     const { name, surname, password, mail } = req.body;
-    
+
     if (!name || !surname || !password || !mail) {
         return res.status(400).send({ message: 'Faltan datos por enviar' });
     }
-    
+
     userController.createUser(name, surname, password, mail, (error, results) => {
         if (error) {
             console.error('Error en la consulta SQL:', error);
@@ -66,10 +83,11 @@ app.post('/register', (req, res) => {
         }
 
         if (results && results.affectedRows >= 1) {
-            return res.status(200).send({ message: 'Usuario registrado correctamente' });
+            res.redirect(`/inicio?hash=${results.hash}`);
+            // res.status(200).send({ message: 'Usuario registrado correctamente' });
         } else {
-            console.log(results);
-            return res.status(500).send({ message: 'No se pudo registrar al usuario' });
+            console.log("Ya registrado => ",results);
+            return res.status(500).send({ message: 'Este correo ya esta registrado' });
         }
     });
 });
