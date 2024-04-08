@@ -60,10 +60,15 @@ function createUser(name, surname, password, mail, callback) {
     }
 }
 
+function cookiHashExist(hash) {
+    connection.query('SELECT * FROM users WHERE hash = ?', [hash]);
+}
+
 
 
 module.exports = {
     connection,
     findUser,
-    createUser
+    createUser,
+    cookiHashExist,
 };

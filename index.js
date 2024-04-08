@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 const userController = require('./userController.js');
 const app = express();
 const PORT = 8080;
@@ -9,6 +10,7 @@ const templatePath = path.join(__dirname, '/login.html');
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 app.listen(PORT, () => console.log(`http://localhost:${PORT} levantado`));
 
@@ -16,18 +18,29 @@ app.get('/', (req, res) => res.sendFile(templatePath));
 app.get('/login', (req, res) => res.sendFile(__dirname + '/login.html'));
 app.get('/register', (req, res) => res.sendFile(__dirname + '/register.html'));
 app.get('/inicio', (req, res) => {
-    // const username = req.query.username;
+    const hash = req.cookies.hash;
 
-    // if (!username) {
-    //     res.status(400).send({ message: 'Nombre de usuario no proporcionado' });
-    //     return;
-    // }
+    if (!hash) {
+        return res.status(401).send('Acceso no autorizado');
+    }
+    userController.cookiHashExist(hash, (error, result) => {
+        console.log(result);
+        if (error) {
+            console.error('Error en la consulta SQL:', error);
+            return res.status(500).send('Error en la consulta SQL');
+        }
 
-
-
-    res.render('hola');
-    // res.render('hola', { username: username });
+        if (results.length > 0) {
+            const username = result[0].name;
+            res.render('hola', { username });
+        } else {
+            res.status(401).send('Acceso no autorizado');
+        }
+    });
+    // Consultar la base de datos para verificar la existencia del hash
+    
 });
+
 
 app.post('/login', (req, res) => {
     const { mail, password } = req.body;
