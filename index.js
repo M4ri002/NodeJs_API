@@ -15,14 +15,14 @@ app.listen(PORT, () => console.log(`http://localhost:${PORT} levantado`));
 app.get('/', (req, res) => res.sendFile(templatePath));
 
 app.post('/login', (req, res) => {
-    const { name, password } = req.body;
+    const { mail, password } = req.body;
 
-    if (!name || !password) {
+    if (!mail || !password) {
         res.status(400).send({ message: 'Faltan datos por enviar' });
         return;
     }
 
-    userController.findUser(name, password, (error, results) => {
+    userController.findUser(mail, (error, results) => {
         if (error) {
             console.error('Error en la consulta SQL:', error);
             res.status(500).send({ error: 'Error en la consulta SQL. Puede que la base de datos no esté disponible' });
@@ -41,44 +41,36 @@ app.post('/login', (req, res) => {
 
 app.post('/register', (req, res) => {
     const { name, surname, password, mail } = req.body;
+    
     if (!name || !surname || !password || !mail) {
-        res.status(400).send({ message: 'Faltan datos por enviar' });
-        return;
+        return res.status(400).send({ message: 'Faltan datos por enviar' });
     }
+    
     userController.createUser(name, surname, password, mail, (error, results) => {
-        console.log(results);
-        if (results == 1 || results == 2 || results == 3) {
-            console.log("dentor");
+        if (error) {
+            console.error('Error en la consulta SQL:', error);
+            return res.status(500).send({ error: 'Error al procesar la solicitud' });
+        }
+
+        if (results === 1 || results === 2 || results === 3) {
             switch (results) {
                 case 1:
-                    res.send({ message: 'Error! Tu nombre o apellidos no son validos' })
-                    break;
+                    return res.status(400).send({ message: 'Error! Tu nombre o apellidos no son válidos' });
                 case 2:
-                    res.send({ message: 'Error! La contraseña no es valida, asegurate que tenga más de 4 digitos' })
-                    break;
+                    return res.status(400).send({ message: 'Error! La contraseña no es válida, asegúrate de que tenga más de 4 caracteres' });
                 case 3:
-                    res.send({ message: 'Error! El Email no contiene una sintaxis apropiada' })
-                    break;
+                    return res.status(400).send({ message: 'Error! El correo electrónico no tiene un formato válido' });
                 default:
-                    break;
+                    return res.status(500).send({ message: 'Error inesperado' });
             }
         }
 
-        else if (results.affectedRows >= 1) {
-            // const username = results[0].name;
-            // res.render('index', { username: username });
-            console.log("HE ENTRADO", results);
-            res.send({ message: 'Insertado correctamente' });
-        }
-        else if (results.affectedRows == 0) {
-            res.status(401).send({ message: 'No se ha podido insertar' });
+        if (results && results.affectedRows >= 1) {
+            return res.status(200).send({ message: 'Usuario registrado correctamente' });
+        } else {
             console.log(results);
-            console.log('El usuario no existe');
-        }
-        if (error) {
-            console.error('Error en la consulta SQL:', error);
-            res.status(500).send({ error: 'Error verifica que los datos son correctos' });
-            return;
+            return res.status(500).send({ message: 'No se pudo registrar al usuario' });
         }
     });
 });
+
