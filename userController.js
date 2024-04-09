@@ -60,14 +60,71 @@ function createUser(name, surname, password, mail, callback) {
     }
 }
 
-function cookiHashExist(hash) {
-    connection.query('SELECT * FROM users WHERE hash = ?', [hash]);
+function cookiHashExist(hash, callback) {
+    connection.query('SELECT hash FROM users WHERE hash = ?', [hash], (error, results) => {
+        if (error) {
+            console.error('Error al consultar la base de datos:', error);
+            callback(error, null); // Llama al callback con el error
+        } else {
+            callback(null, results); // Llama al callback con los resultados de la consulta
+            
+        }
+    });
 }
 
-function timeCookie(hash, callback) {
-    connection.query('SELECT expire FROM users WHERE hash = ?', [hash], (error, results) => {
-        return callback(false, results[0].expire );
-    });
+
+function timeCookie(mail, password, hash, callback) {
+    console.log(mail, password, hash);
+    if (!mail && !password && hash) {
+        // Consulta para obtener la fecha de expedición asociada al hash
+        connection.query('SELECT expire FROM users WHERE hash = ?', [hash], (error, results) => {
+            if (error) {
+                console.error('Error al consultar la base de datos:', error);
+                return callback(error, null);
+            }
+
+            // Verifica si se encontraron resultados
+            if (results.length > 0) {
+                const expireDate = results[0].expire;
+                const currentDate = new Date();
+
+                // Compara la fecha de expedición con la fecha actual
+                if (expireDate < currentDate) {
+                    // Si la fecha de expedición ha caducado, devuelve 0
+                    return callback(false, {value: 0});
+                } else {
+                    // Si la fecha de expedición es válida, devuelve el hash del usuario
+                    return callback(false, expireDate);
+                }
+            } else {
+                // No se encontraron resultados para el hash proporcionado
+                return callback(false, null);
+            }
+        });
+    } else if (mail && password && !hash) {
+        // Aquí deberías incluir la lógica para verificar la fecha de expedición según el mail y la contraseña
+        // Pero en tu código actual, el query es idéntico al caso anterior
+        connection.query('SELECT expire,hash FROM users WHERE mail = ? AND password = ?', 
+        [mail,password], (error, results) => {
+            if (error) {
+                console.error('Error al consultar la base de datos:', error);
+                return callback(error, null);
+            }
+
+            if (results.length > 0) {
+                const expireDate = results[0].expire;
+                const currentDate = new Date();
+
+                if (expireDate < currentDate) {
+                    return callback(false, {value: 0});
+                } else {
+                    return callback(false, results[0].hash);
+                }
+            } else {
+                return callback(false, null);
+            }
+        });
+    }
 }
 
 

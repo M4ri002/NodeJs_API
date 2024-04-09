@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const userController = require('./userController.js');
+const { validateCookie, generateSHA512Hash, exactDate } = require('./tools.js');
 const app = express();
 const PORT = 8080;
 const templatePath = path.join(__dirname, '/login.html');
@@ -18,27 +19,19 @@ app.get('/', (req, res) => res.sendFile(templatePath));
 app.get('/login', (req, res) => res.sendFile(__dirname + '/login.html'));
 app.get('/register', (req, res) => res.sendFile(__dirname + '/register.html'));
 app.get('/inicio', (req, res) => {
-    const hash = req.cookies.hash;
+    const hash = req.cookies.Expire; // Obtén el valor de la cookie hash
 
-    if (!hash) {
-        return res.status(401).send('Acceso no autorizado');
-    }
-    // userController.cookiHashExist(hash, (error, result) => {
-    //     console.log(result);
-    //     if (error) {
-    //         console.error('Error en la consulta SQL:', error);
-    //         return res.status(500).send('Error en la consulta SQL');
-    //     }
+    userController.cookiHashExist(hash, (error, results) => {
+        if (error) {
+            return res.status(500).send('Error al verificar la cookie hash');
+        }
 
-    //     if (results.length > 0) {
-    //         const username = result[0].name;
-    //         res.render('hola', { username });
-    //     } else {
-    //         res.status(401).send('Acceso no autorizado');
-    //     }
-    // });
-    // Consultar la base de datos para verificar la existencia del hash
-
+        if (results.length > 0) {
+            res.render('index');
+        } else {
+            res.status(401).send('Acceso no autorizado');
+        }
+    });
 });
 
 
@@ -57,11 +50,30 @@ app.post('/login', (req, res) => {
             res.status(500).send({ error: 'Error en la consulta SQL. Puede que la base de datos no esté disponible' });
             return;
         }
-
+        // console.log(results[0]);
         if (results.length > 0) {
-            const username = results[0].name;
-            // res.redirect(`/inicio?username=${username}`);
-            res.redirect(`/inicio`);
+            userController.timeCookie(results[0].mail, results[0].password, false, (error, resultCookie) => {
+                console.log(resultCookie);
+                if (error) {
+                    console.error('Error al obtener la fecha de expiración:', error);
+                    return res.status(500).send({ message: 'Error al obtener la fecha de expiración' });
+                }
+                else {
+                    if (resultCookie.value == 0) {
+                        console.log("Hay que crear cookie en login");
+                        const expirationDate = new Date(resultCookie);
+
+                        // No generar hash aquí crear funcion en tools que a la vez que crea guarda el nuevo hash en la base de datos en el usuario que toque 
+                        res.cookie('Expire', generateSHA512Hash(results[0].mail + results[0].mail + results[0].mail + exactDate()), {
+                            expires: expirationDate,
+                            httpOnly: true
+                        });
+                        res.redirect(`/inicio`);
+                    }
+
+
+                }
+            });
             // res.render('index', { username: username });
         } else {
             res.status(401).send({ message: 'Usuario no encontrado' });
@@ -96,23 +108,24 @@ app.post('/register', (req, res) => {
         }
 
         if (resultsUser && resultsUser.affectedRows >= 1) {
-            console.log(resultsUser);
+            // console.log(resultsUser);
             userController.timeCookie(resultsUser.hash, (error, resultCookie) => {
                 if (error) {
                     console.error('Error al obtener la fecha de expiración:', error);
                     return res.status(500).send({ message: 'Error al obtener la fecha de expiración' });
                 }
                 else {
-                    console.log("TimeCookie antes de formateo => ", resultCookie);
+                    // console.log("TimeCookie antes de formateo => ", resultCookie);
                     const expirationDate = new Date(resultCookie);
-                    console.log("TimeCookie formateado => ", expirationDate);
+                    // console.log("TimeCookie formateado => ", expirationDate);
 
                     res.cookie('Expire', resultsUser.hash, {
                         expires: expirationDate,
                         httpOnly: true
                     });
-                    // res.redirect(`/inicio?hash=${results.hash}`);
-                    return res.status(200).send({ message: 'Usuario registrado' });
+                    // res.status(200).send({ message: 'Usuario registrado' });
+                    // res.redirect(`/inicio?hash=${resultsUser.hash}`);
+                    res.redirect(`/inicio`);
 
                 }
             });
@@ -122,4 +135,3 @@ app.post('/register', (req, res) => {
         }
     });
 });
-
