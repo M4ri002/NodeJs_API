@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const userController = require('./userController.js');
-const { validateCookie, generateSHA512Hash, exactDate } = require('./tools.js');
+const { generateSHA512Hash, exactDate } = require('./tools.js');
 const app = express();
 const PORT = 8080;
 const templatePath = path.join(__dirname, '/login.html');
@@ -21,14 +21,15 @@ app.get('/register', (req, res) => res.sendFile(__dirname + '/register.html'));
 app.get('/inicio', (req, res) => {
     const hash = req.cookies.Expire; // Obtén el valor de la cookie hash
 
-    userController.cookiHashExist(hash, (error, results) => {
+    userController.cookieValidate(hash, (error, results) => {
         if (error) {
             return res.status(500).send('Error al verificar la cookie hash');
         }
-
-        if (results.length > 0) {
+        if (results.value === 0 && results.message == "expired") {
+            res.status(401).send('Sesion caducada');
+        } else if (results.value == 0 && results.message == "ok") {
             res.render('index');
-        } else {
+        } else if (results.value == 2 && results.message == "undefined") {
             res.status(401).send('Acceso no autorizado');
         }
     });
@@ -39,42 +40,42 @@ app.post('/login', (req, res) => {
     const { mail, password } = req.body;
 
     if (!mail || !password) {
-        res.status(400).send({ message: 'Faltan datos por enviar' });
-        return;
+        return res.status(400).send({ message: 'Faltan datos por enviar' });
     }
 
     userController.findUser(mail, password, (error, results) => {
-
         if (error) {
             console.error('Error en la consulta SQL:', error);
-            res.status(500).send({ error: 'Error en la consulta SQL. Puede que la base de datos no esté disponible' });
-            return;
+            return res.status(500).send({ error: 'Error en la consulta SQL. Puede que la base de datos no esté disponible' });
         }
-        // console.log(results[0]);
+
         if (results.length > 0) {
             userController.timeCookie(results[0].mail, results[0].password, false, (error, resultCookie) => {
-                console.log(resultCookie);
                 if (error) {
                     console.error('Error al obtener la fecha de expiración:', error);
                     return res.status(500).send({ message: 'Error al obtener la fecha de expiración' });
                 }
-                else {
-                    if (resultCookie.value == 0) {
-                        console.log("Hay que crear cookie en login");
-                        const expirationDate = new Date(resultCookie);
 
-                        // No generar hash aquí crear funcion en tools que a la vez que crea guarda el nuevo hash en la base de datos en el usuario que toque 
-                        res.cookie('Expire', generateSHA512Hash(results[0].mail + results[0].mail + results[0].mail + exactDate()), {
+                if (resultCookie.value == 0) {
+                    const newHash = generateSHA512Hash(results[0].name + results[0].surname + results[0].password + exactDate());
+                    const expirationDate = new Date(resultCookie.expire);
+
+                    userController.updateHash(results[0].mail, newHash, (error, resultsUpdate) => {
+                        if (error) {
+                            console.error('Error al actualizar el hash:', error);
+                            return res.status(500).send({ message: 'Error al actualizar el hash' });
+                        }
+
+                        res.cookie('Expire', newHash, {
                             expires: expirationDate,
                             httpOnly: true
                         });
                         res.redirect(`/inicio`);
-                    }
-
-
+                    });
+                } else {
+                    res.redirect(`/inicio`);
                 }
             });
-            // res.render('index', { username: username });
         } else {
             res.status(401).send({ message: 'Usuario no encontrado' });
         }
@@ -94,44 +95,24 @@ app.post('/register', (req, res) => {
             return res.status(500).send({ error: 'Error al procesar la solicitud' });
         }
 
-        if (resultsUser === 1 || resultsUser === 2 || resultsUser === 3) {
-            switch (resultsUser) {
-                case 1:
-                    return res.status(400).send({ message: 'Error! Tu nombre o apellidos no son válidos' });
-                case 2:
-                    return res.status(400).send({ message: 'Error! La contraseña no es válida, asegúrate de que tenga más de 4 caracteres' });
-                case 3:
-                    return res.status(400).send({ message: 'Error! El correo electrónico no tiene un formato válido' });
-                default:
-                    return res.status(500).send({ message: 'Error inesperado' });
-            }
-        }
-
         if (resultsUser && resultsUser.affectedRows >= 1) {
-            // console.log(resultsUser);
-            userController.timeCookie(resultsUser.hash, (error, resultCookie) => {
+            userController.timeCookie(false, false, resultsUser.hash, (error, resultCookie) => {
                 if (error) {
                     console.error('Error al obtener la fecha de expiración:', error);
                     return res.status(500).send({ message: 'Error al obtener la fecha de expiración' });
                 }
-                else {
-                    // console.log("TimeCookie antes de formateo => ", resultCookie);
-                    const expirationDate = new Date(resultCookie);
-                    // console.log("TimeCookie formateado => ", expirationDate);
 
-                    res.cookie('Expire', resultsUser.hash, {
-                        expires: expirationDate,
-                        httpOnly: true
-                    });
-                    // res.status(200).send({ message: 'Usuario registrado' });
-                    // res.redirect(`/inicio?hash=${resultsUser.hash}`);
-                    res.redirect(`/inicio`);
-
-                }
+                const expirationDate = new Date(resultCookie);
+                res.cookie('Expire', resultsUser.hash, {
+                    expires: expirationDate,
+                    httpOnly: true
+                });
+                res.redirect(`/inicio`);
             });
         } else {
             console.log("Ya registrado => ", resultsUser);
-            return res.status(500).send({ message: 'Este correo ya esta registrado' });
+            return res.status(500).send({ message: 'Este correo ya está registrado' });
         }
     });
 });
+

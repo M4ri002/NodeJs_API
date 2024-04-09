@@ -50,31 +50,50 @@ function createUser(name, surname, password, mail, callback) {
                 const newPassword = generateSHA512Hash(lowerMail + password);
                 const hash = generateSHA512Hash(name + surname + password + exactDate());
 
-                connection.query('INSERT INTO users(name, surname, mail, password, hash, expire) VALUES (?, ?, ?, ?, ?, DATE_FORMAT(NOW() + INTERVAL 20 SECOND, "%Y-%m-%d %H:%i:%s"))', 
-                [name, surname, lowerMail, newPassword, hash], (error, results) => {
-                    // Devuelvo a cliente estos datos
-                    return callback(false, { hash: hash, affectedRows: results.affectedRows });
-                });
+                connection.query('INSERT INTO users(name, surname, mail, password, hash, expire) VALUES (?, ?, ?, ?, ?, DATE_FORMAT(NOW() + INTERVAL 20 SECOND, "%Y-%m-%d %H:%i:%s"))',
+                    [name, surname, lowerMail, newPassword, hash], (error, results) => {
+                        // Devuelvo a cliente estos datos
+                        return callback(false, { hash: hash, affectedRows: results.affectedRows });
+                    });
             }
         });
     }
 }
 
-function cookiHashExist(hash, callback) {
-    connection.query('SELECT hash FROM users WHERE hash = ?', [hash], (error, results) => {
+function cookieValidate(hash, callback) {
+    connection.query('SELECT hash, expire FROM users WHERE hash = ?', [hash], (error, results) => {
         if (error) {
             console.error('Error al consultar la base de datos:', error);
             callback(error, null); // Llama al callback con el error
+            return; // Sale de la función temprano en caso de error
+        }
+        if (results.length === 0) {
+            // No se encontró ningún usuario con el hash dado
+            callback(null, { value: 2, message: "undefined" }); // Llama al callback con resultados nulos
+            return; // Sale de la función temprano
+        }
+        const expireDate = results[0].expire;
+
+        if (expireDate != null) {
+            const currentDate = new Date();
+            if (expireDate < currentDate) {
+                // La cookie ha expirado
+                callback(null, { value: 0, message: "expired" });
+            } else {
+                // La cookie es válida
+                callback(null, { value: 0, message: "ok" });
+            }
         } else {
-            callback(null, results); // Llama al callback con los resultados de la consulta
-            
+            // La fecha de expiración es nula (esto puede indicar un problema)
+            callback(null, null);
         }
     });
 }
 
 
+
 function timeCookie(mail, password, hash, callback) {
-    console.log(mail, password, hash);
+    // console.log(mail, password, hash);
     if (!mail && !password && hash) {
         // Consulta para obtener la fecha de expedición asociada al hash
         connection.query('SELECT expire FROM users WHERE hash = ?', [hash], (error, results) => {
@@ -91,7 +110,7 @@ function timeCookie(mail, password, hash, callback) {
                 // Compara la fecha de expedición con la fecha actual
                 if (expireDate < currentDate) {
                     // Si la fecha de expedición ha caducado, devuelve 0
-                    return callback(false, {value: 0});
+                    return callback(false, { value: 0 });
                 } else {
                     // Si la fecha de expedición es válida, devuelve el hash del usuario
                     return callback(false, expireDate);
@@ -102,36 +121,72 @@ function timeCookie(mail, password, hash, callback) {
             }
         });
     } else if (mail && password && !hash) {
-        // Aquí deberías incluir la lógica para verificar la fecha de expedición según el mail y la contraseña
-        // Pero en tu código actual, el query es idéntico al caso anterior
-        connection.query('SELECT expire,hash FROM users WHERE mail = ? AND password = ?', 
-        [mail,password], (error, results) => {
+        // Aquí incluimos la lógica para verificar la fecha de expiración según el correo y la contraseña
+        connection.query('SELECT * FROM users WHERE mail = ? AND password = ?', [mail, password], (error, results) => {
             if (error) {
                 console.error('Error al consultar la base de datos:', error);
                 return callback(error, null);
             }
 
             if (results.length > 0) {
-                const expireDate = results[0].expire;
+                const userId = results[0].id; // Obtener el ID del usuario encontrado
+                const expireDate = new Date(results[0].expire); // Obtener la fecha de expiración del usuario
                 const currentDate = new Date();
 
                 if (expireDate < currentDate) {
-                    return callback(false, {value: 0});
+                    const newExpirationDate = new Date(currentDate.getTime() + (20 * 1000)); // Sumar 20 segundos a la fecha actual
+                    const formattedNewExpirationDate = newExpirationDate;
+
+                    connection.query('UPDATE users SET expire = ? WHERE id = ?', [formattedNewExpirationDate, userId], (error, updateResult) => {
+                        if (error) {
+                            console.error('Error al actualizar la fecha de expiración en la base de datos:', error);
+                            return callback(error, null);
+                        }
+
+                        if (updateResult.affectedRows > 0) {
+                            // Actualización exitosa, devolver el nuevo valor de la fecha de expiración
+                            return callback(false, { value: 0, expire: formattedNewExpirationDate });
+                        } else {
+                            // No se pudo actualizar la fecha de expiración
+                            return callback(false, null);
+                        }
+                    });
                 } else {
+                    // La fecha de expiración es válida, devolver el hash del usuario encontrado
                     return callback(false, results[0].hash);
                 }
             } else {
+                // No se encontró ningún usuario con el correo y contraseña especificados
                 return callback(false, null);
             }
         });
     }
 }
 
+function updateHash(mail, newHash, callback) {
+    connection.query(
+        'UPDATE users SET hash = ? WHERE mail = ?',
+        [newHash, mail],
+        (error, results) => {
+            if (error) {
+                console.error('Error al actualizar el hash en la base de datos:', error);
+                return callback(error, null);
+            }
+            // Verifica si se realizó correctamente la actualización
+            if (results.affectedRows > 0) {
+                return callback(false, true);
+            } else {
+                return callback(false, false); // No se actualizó ninguna fila
+            }
+        }
+    );
+}
 
 module.exports = {
     connection,
     findUser,
     createUser,
-    cookiHashExist,
+    cookieValidate,
     timeCookie,
+    updateHash,
 };
