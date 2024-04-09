@@ -49,9 +49,9 @@ function createUser(name, surname, password, mail, callback) {
                 const lowerMail = convertToLowercase(mail);
                 const newPassword = generateSHA512Hash(lowerMail + password);
                 const hash = generateSHA512Hash(name + surname + password + exactDate());
-                const expire = expireDate();
 
-                connection.query('INSERT INTO users(name, surname, mail, password, hash, expire) VALUES (?, ?, ?, ?, ?, ?)', [name, surname, lowerMail, newPassword, hash, expire], (error, results) => {
+                connection.query('INSERT INTO users(name, surname, mail, password, hash, expire) VALUES (?, ?, ?, ?, ?, DATE_FORMAT(NOW() + INTERVAL 20 SECOND, "%Y-%m-%d %H:%i:%s"))', 
+                [name, surname, lowerMail, newPassword, hash], (error, results) => {
                     // Devuelvo a cliente estos datos
                     return callback(false, { hash: hash, affectedRows: results.affectedRows });
                 });
@@ -64,6 +64,11 @@ function cookiHashExist(hash) {
     connection.query('SELECT * FROM users WHERE hash = ?', [hash]);
 }
 
+function timeCookie(hash, callback) {
+    connection.query('SELECT expire FROM users WHERE hash = ?', [hash], (error, results) => {
+        return callback(false, results[0].expire );
+    });
+}
 
 
 module.exports = {
@@ -71,4 +76,5 @@ module.exports = {
     findUser,
     createUser,
     cookiHashExist,
+    timeCookie,
 };

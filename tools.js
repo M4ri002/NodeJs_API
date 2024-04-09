@@ -28,21 +28,6 @@ function exactDate() {
     return horaConDecimales = `${hora}:${minutos}:${segundos}.${milisegundos}`;
 }
 
-function expireDate() {
-    const ahora = new Date();
-
-    const expiracion = new Date(ahora.getTime() + (3600 * 1000));
-
-    const dia = expiracion.getDate();
-    const mes = expiracion.getMonth() + 1; // Los meses en JavaScript son 0-indexados, por lo que se suma 1
-    const año = expiracion.getFullYear();
-    const horas = expiracion.getHours();
-    const minutos = expiracion.getMinutes();
-    const segundos = expiracion.getSeconds();
-
-    return fechaExpiracion = `${año}-${mes}-${dia} ${horas}:${minutos}:${segundos}`;
-
-}
 
 function validateData(name, surname, password, mail) {
     const nameSurnameRegex = /^[a-zA-Z]+$/;
@@ -71,7 +56,7 @@ module.exports = {
     capitalizeFirstLetter,
     generateSHA512Hash,
     exactDate,
-    expireDate,
+    // expireDate,
     validateData,
     convertToLowercase,
 };

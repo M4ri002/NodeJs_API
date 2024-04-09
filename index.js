@@ -23,22 +23,22 @@ app.get('/inicio', (req, res) => {
     if (!hash) {
         return res.status(401).send('Acceso no autorizado');
     }
-    userController.cookiHashExist(hash, (error, result) => {
-        console.log(result);
-        if (error) {
-            console.error('Error en la consulta SQL:', error);
-            return res.status(500).send('Error en la consulta SQL');
-        }
+    // userController.cookiHashExist(hash, (error, result) => {
+    //     console.log(result);
+    //     if (error) {
+    //         console.error('Error en la consulta SQL:', error);
+    //         return res.status(500).send('Error en la consulta SQL');
+    //     }
 
-        if (results.length > 0) {
-            const username = result[0].name;
-            res.render('hola', { username });
-        } else {
-            res.status(401).send('Acceso no autorizado');
-        }
-    });
+    //     if (results.length > 0) {
+    //         const username = result[0].name;
+    //         res.render('hola', { username });
+    //     } else {
+    //         res.status(401).send('Acceso no autorizado');
+    //     }
+    // });
     // Consultar la base de datos para verificar la existencia del hash
-    
+
 });
 
 
@@ -76,14 +76,14 @@ app.post('/register', (req, res) => {
         return res.status(400).send({ message: 'Faltan datos por enviar' });
     }
 
-    userController.createUser(name, surname, password, mail, (error, results) => {
+    userController.createUser(name, surname, password, mail, (error, resultsUser) => {
         if (error) {
             console.error('Error en la consulta SQL:', error);
             return res.status(500).send({ error: 'Error al procesar la solicitud' });
         }
 
-        if (results === 1 || results === 2 || results === 3) {
-            switch (results) {
+        if (resultsUser === 1 || resultsUser === 2 || resultsUser === 3) {
+            switch (resultsUser) {
                 case 1:
                     return res.status(400).send({ message: 'Error! Tu nombre o apellidos no son válidos' });
                 case 2:
@@ -95,11 +95,29 @@ app.post('/register', (req, res) => {
             }
         }
 
-        if (results && results.affectedRows >= 1) {
-            res.redirect(`/inicio?hash=${results.hash}`);
-            // res.status(200).send({ message: 'Usuario registrado correctamente' });
+        if (resultsUser && resultsUser.affectedRows >= 1) {
+            console.log(resultsUser);
+            userController.timeCookie(resultsUser.hash, (error, resultCookie) => {
+                if (error) {
+                    console.error('Error al obtener la fecha de expiración:', error);
+                    return res.status(500).send({ message: 'Error al obtener la fecha de expiración' });
+                }
+                else {
+                    console.log("TimeCookie antes de formateo => ", resultCookie);
+                    const expirationDate = new Date(resultCookie);
+                    console.log("TimeCookie formateado => ", expirationDate);
+
+                    res.cookie('Expire', resultsUser.hash, {
+                        expires: expirationDate,
+                        httpOnly: true
+                    });
+                    // res.redirect(`/inicio?hash=${results.hash}`);
+                    return res.status(200).send({ message: 'Usuario registrado' });
+
+                }
+            });
         } else {
-            console.log("Ya registrado => ",results);
+            console.log("Ya registrado => ", resultsUser);
             return res.status(500).send({ message: 'Este correo ya esta registrado' });
         }
     });
