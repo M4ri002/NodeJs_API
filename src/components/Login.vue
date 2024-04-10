@@ -7,6 +7,8 @@
 </template>
 
 <script setup>
+console.log("ESTAS EN LOGIN CLIENTE");
+
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
@@ -18,10 +20,9 @@ const router = useRouter();
 const login = async () => {
   try {
     const response = await axios.post('/server/login', { mail: mail.value, password: password.value });
-    console.log(response);
+    console.log("Log client login => ",response);
     if (response.status === 200) {
-      console.log('Autorizado');
-      router.push('/'); // Redirige al usuario a la página de inicio
+      router.push('/bienvenido'); // Redirige al usuario a la página de inicio
     } else if (response.status === 401) {
       console.log('La sesión ha caducado, redirigiendo al formulario de inicio de sesión...');
       router.push('/login'); // Redirige al usuario al formulario de inicio de sesión

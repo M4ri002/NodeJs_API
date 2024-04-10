@@ -21,27 +21,24 @@ app.use(cookieParser());
 
 app.listen(PORT, () => console.log(`http://localhost:${PORT} levantado`));
 
-app.get('/inicio', (req, res) => {
+app.get('/session', (req, res) => {
     const hash = req.cookies.Expire;
-    console.log("Hola desde server");
     userController.cookieValidate(hash, (error, results) => {
+        console.log("Log cookie => ", results);
         if (error) {
             return res.status(500).send('Error al verificar la cookie hash');
         }
         if (results.value === 0 && results.message == "expired") {
-            res.status(401).send('Sesion caducada');
+            res.status(401).send('SESION CADUCADA');
         } else if (results.value == 0 && results.message == "ok") {
-            // res.render('index');
-            res.status(200).send('Autorizado');
+            res.status(200).send('AUTORIZADO');
         } else if (results.value == 2 && results.message == "undefined") {
-            res.status(401).send('Acceso no autorizado');
+            res.status(401).send('SESION NO AUTORIZADA');
         }
     });
 });
 
-
 app.post('/server/login', (req, res) => {
-    console.log("Recivido el intento de login");
     const { mail, password } = req.body;
 
     if (!mail || !password) {
@@ -75,12 +72,11 @@ app.post('/server/login', (req, res) => {
                                 expires: expirationDate,
                                 httpOnly: true
                             });
-                            res.redirect(`/inicio`);
+                            res.status(200).send('Correcto');
                         }
-
                     });
                 } else {
-                    res.redirect(`/inicio`);
+                    res.redirect(`/login`);
                 }
             });
         } else {
@@ -114,7 +110,7 @@ app.post('/register', (req, res) => {
                     expires: expirationDate,
                     httpOnly: true
                 });
-                res.redirect(`/inicio`);
+                res.redirect(`/bienvenido`);
             });
         } else {
             console.log("Ya registrado => ", resultsUser);
@@ -125,3 +121,8 @@ app.post('/register', (req, res) => {
 
 app.get('/', VueLoad);
 app.get('/login', VueLoad);
+// app.get('/bienvenido', controlSession, VueLoad);
+app.get('/bienvenido', (req, res) => {
+    console.log("ME HAN HECHO UN GET A BIENVENIDO");
+    VueLoad(req, res); // Llama a VueLoad con los parámetros req y res
+});

@@ -1,5 +1,5 @@
+const path = require('path');
 const crypto = require('crypto');
-const userController = require('../controllers/userController.js');
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);

@@ -51,7 +51,7 @@ function createUser(name, surname, password, mail, callback) {
             }
         });
     }
-}
+};
 
 function cookieValidate(hash, callback) {
     connection.query('SELECT hash, expire FROM users WHERE hash = ?', [hash], (error, results) => {
@@ -170,6 +170,8 @@ function updateHash(mail, newHash, callback) {
         }
     );
 }
+
+
 
 module.exports = {
     connection,
