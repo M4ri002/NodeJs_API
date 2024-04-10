@@ -18,9 +18,10 @@ const router = useRouter();
 const login = async () => {
   try {
     const response = await axios.post('/server/login', { mail: mail.value, password: password.value });
-
+    console.log(response);
     if (response.status === 200) {
-      router.push('/inicio'); // Redirige al usuario a la página de inicio
+      console.log('Autorizado');
+      router.push('/'); // Redirige al usuario a la página de inicio
     } else if (response.status === 401) {
       console.log('La sesión ha caducado, redirigiendo al formulario de inicio de sesión...');
       router.push('/login'); // Redirige al usuario al formulario de inicio de sesión

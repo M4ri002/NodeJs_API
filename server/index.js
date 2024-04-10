@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const userController = require('./controllers/userController.js');
+const { VueLoad } = require('./routes/routes.js')
+
 const { generateSHA512Hash, exactDate } = require('./utils/tools.js');
 
 const app = express();
@@ -17,17 +19,10 @@ app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-
 app.listen(PORT, () => console.log(`http://localhost:${PORT} levantado`));
 
-// app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname, '../../dist/index.html'));
-//   });
-  
-// app.get('/server/login', (req, res) => res.sendFile(__dirname + '/views/login.html'));
-// app.get('/register', (req, res) => res.sendFile(__dirname + '/views/register.html'));
 app.get('/inicio', (req, res) => {
-    const hash = req.cookies.Expire; // Obtén el valor de la cookie hash
+    const hash = req.cookies.Expire;
     console.log("Hola desde server");
     userController.cookieValidate(hash, (error, results) => {
         if (error) {
@@ -46,7 +41,7 @@ app.get('/inicio', (req, res) => {
 
 
 app.post('/server/login', (req, res) => {
-    console.log("Ha entrado");
+    console.log("Recivido el intento de login");
     const { mail, password } = req.body;
 
     if (!mail || !password) {
@@ -128,3 +123,5 @@ app.post('/register', (req, res) => {
     });
 });
 
+app.get('/', VueLoad);
+app.get('/login', VueLoad);
