@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const userController = require('./userController.js');
+const userController = require('../controllers/userController.js');
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -45,12 +45,8 @@ function validateData(name, surname, password, mail) {
         return 3;
     }
 
-    return "200";
+    return 200;
 }
-
-// function generateSHA512Hash(data) {
-//     generateSHA512Hash(data + exactDate());
-// }
 
 module.exports = {
     capitalizeFirstLetter,

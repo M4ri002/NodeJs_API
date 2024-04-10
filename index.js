@@ -2,11 +2,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const userController = require('./userController.js');
-const { generateSHA512Hash, exactDate } = require('./tools.js');
+const userController = require('./controllers/userController.js');
+const { generateSHA512Hash, exactDate } = require('./utils/tools.js');
 const app = express();
 const PORT = 8080;
-const templatePath = path.join(__dirname, '/login.html');
+const templatePath = path.join(__dirname, '/views/login.html');
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
@@ -16,8 +16,8 @@ app.use(cookieParser());
 app.listen(PORT, () => console.log(`http://localhost:${PORT} levantado`));
 
 app.get('/', (req, res) => res.sendFile(templatePath));
-app.get('/login', (req, res) => res.sendFile(__dirname + '/login.html'));
-app.get('/register', (req, res) => res.sendFile(__dirname + '/register.html'));
+app.get('/login', (req, res) => res.sendFile(__dirname + '/views/login.html'));
+app.get('/register', (req, res) => res.sendFile(__dirname + '/views/register.html'));
 app.get('/inicio', (req, res) => {
     const hash = req.cookies.Expire; // Obtén el valor de la cookie hash
 
@@ -65,12 +65,14 @@ app.post('/login', (req, res) => {
                             console.error('Error al actualizar el hash:', error);
                             return res.status(500).send({ message: 'Error al actualizar el hash' });
                         }
+                        if (resultsUpdate) {
+                            res.cookie('Expire', newHash, {
+                                expires: expirationDate,
+                                httpOnly: true
+                            });
+                            res.redirect(`/inicio`);
+                        }
 
-                        res.cookie('Expire', newHash, {
-                            expires: expirationDate,
-                            httpOnly: true
-                        });
-                        res.redirect(`/inicio`);
                     });
                 } else {
                     res.redirect(`/inicio`);

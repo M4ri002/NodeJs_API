@@ -1,6 +1,6 @@
 const mysql = require('mysql');
-const { generateSHA512Hash, exactDate, expireDate, validateData, convertToLowercase } = require('./tools.js')
-
+const { generateSHA512Hash, exactDate, validateData, convertToLowercase } = require('../utils/tools.js')
+const timeExpire = 10; 
 // Crear la conexión a la base de datos
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -9,9 +9,6 @@ const connection = mysql.createConnection({
     database: 'finalproject'
 });
 
-// Función para realizar la consulta del usuario por nombre
-// Función para realizar la consulta del usuario por nombre, y opcionalmente por mail
-// Función para buscar un usuario por correo electrónico y opcionalmente por contraseña
 function findUser(mail, password, callback) {
     let query, params;
 
@@ -26,17 +23,14 @@ function findUser(mail, password, callback) {
     }
 
     connection.query(query, params, callback);
-    // Desencriptar el password para poder verificar el login
 }
-
-
 
 function createUser(name, surname, password, mail, callback) {
     const validateResult = validateData(name, surname, password, mail);
 
     if (validateResult === 1 || validateResult === 2 || validateResult === 3) {
         return callback(false, validateResult);
-    } else if (validateResult === "200") {
+    } else if (validateResult === 200) {
 
         findUser(mail, password, (error, results) => {
             if (error) {
@@ -50,9 +44,8 @@ function createUser(name, surname, password, mail, callback) {
                 const newPassword = generateSHA512Hash(lowerMail + password);
                 const hash = generateSHA512Hash(name + surname + password + exactDate());
 
-                connection.query('INSERT INTO users(name, surname, mail, password, hash, expire) VALUES (?, ?, ?, ?, ?, DATE_FORMAT(NOW() + INTERVAL 20 SECOND, "%Y-%m-%d %H:%i:%s"))',
+                connection.query(`INSERT INTO users(name, surname, mail, password, hash, expire) VALUES (?, ?, ?, ?, ?, DATE_FORMAT(NOW() + INTERVAL '${timeExpire}' SECOND, "%Y-%m-%d %H:%i:%s"))`,
                     [name, surname, lowerMail, newPassword, hash], (error, results) => {
-                        // Devuelvo a cliente estos datos
                         return callback(false, { hash: hash, affectedRows: results.affectedRows });
                     });
             }
@@ -64,16 +57,15 @@ function cookieValidate(hash, callback) {
     connection.query('SELECT hash, expire FROM users WHERE hash = ?', [hash], (error, results) => {
         if (error) {
             console.error('Error al consultar la base de datos:', error);
-            callback(error, null); // Llama al callback con el error
-            return; // Sale de la función temprano en caso de error
+            callback(error, null);
+            return;
         }
         if (results.length === 0) {
             // No se encontró ningún usuario con el hash dado
             callback(null, { value: 2, message: "undefined" }); // Llama al callback con resultados nulos
-            return; // Sale de la función temprano
+            return;
         }
         const expireDate = results[0].expire;
-
         if (expireDate != null) {
             const currentDate = new Date();
             if (expireDate < currentDate) {
@@ -89,8 +81,6 @@ function cookieValidate(hash, callback) {
         }
     });
 }
-
-
 
 function timeCookie(mail, password, hash, callback) {
     // console.log(mail, password, hash);
@@ -134,10 +124,9 @@ function timeCookie(mail, password, hash, callback) {
                 const currentDate = new Date();
 
                 if (expireDate < currentDate) {
-                    const newExpirationDate = new Date(currentDate.getTime() + (20 * 1000)); // Sumar 20 segundos a la fecha actual
-                    const formattedNewExpirationDate = newExpirationDate;
+                    const newExpirationDate = new Date(currentDate.getTime() + (timeExpire * 1000)); // Sumar 20 segundos a la fecha actual
 
-                    connection.query('UPDATE users SET expire = ? WHERE id = ?', [formattedNewExpirationDate, userId], (error, updateResult) => {
+                    connection.query('UPDATE users SET expire = ? WHERE id = ?', [newExpirationDate, userId], (error, updateResult) => {
                         if (error) {
                             console.error('Error al actualizar la fecha de expiración en la base de datos:', error);
                             return callback(error, null);
@@ -145,7 +134,7 @@ function timeCookie(mail, password, hash, callback) {
 
                         if (updateResult.affectedRows > 0) {
                             // Actualización exitosa, devolver el nuevo valor de la fecha de expiración
-                            return callback(false, { value: 0, expire: formattedNewExpirationDate });
+                            return callback(false, { value: 0, expire: newExpirationDate });
                         } else {
                             // No se pudo actualizar la fecha de expiración
                             return callback(false, null);
