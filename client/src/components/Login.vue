@@ -1,7 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { decodeCredential } from 'vue3-google-login'
+import { useRouter } from 'vue-router';
+import axios from 'axios';
 
+const mail = ref('');
+const password = ref('');
+const router = useRouter();
 const change = ref(false);
 const isAnimating = ref(false);
 const text = ref("Iniciar Sesión");
@@ -31,8 +36,27 @@ const callback = (response) => {
    const userData = decodeCredential(response.credential)
    console.log("Handle the userData", userData)
 }
-</script>
 
+const login = async () => {
+  try {
+    const response = await axios.post('/server/login', { mail: mail.value, password: password.value });
+    console.log("Log client login => ",response);
+    if (response.status === 200) {
+      router.push('/about'); // Redirige al usuario a la página de inicio
+    } else if (response.status === 401) {
+      console.log('La sesión ha caducado, redirigiendo al formulario de inicio de sesión...');
+      router.push('/login'); // Redirige al usuario al formulario de inicio de sesión
+    } else {
+      console.error('Inicio de sesión fallido:', response.data.message);
+      // Manejar otros casos de inicio de sesión fallido
+    }
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error);
+    // Manejar errores de red o del servidor
+  }
+};
+</script>
+<!-- VOLVER A CREAR LOGIN (MEJOR HECHO) -->
 <template>
    <div>
       <div id="section">
@@ -43,18 +67,18 @@ const callback = (response) => {
                      {{ text }}
                   </h1>
                </div>
-               <form action="" id="form" :class="{ 'form-Animation': change }">
+               <form @submit.prevent="login" id="form" :class="{ 'form-Animation': change }">
                   <div class="input-line">
-                     <input type="email" name="" id="email" placeholder="Email...">
+                     <input type="email" id="email" placeholder="Email..." v-model="mail" required>
                   </div>
                   <div class="input-line">
-                     <input type="password" name="" id="password" placeholder="Contraseña...">
+                     <input type="password" id="password" placeholder="Contraseña..." v-model="password" required>
                   </div>
                   <div class="input-line regist">
-                     <input type="text" name="" id="password" placeholder="Nombre...">
+                     <input type="text" id="password" placeholder="Nombre...">
                   </div>
                   <div class="input-line regist">
-                     <input type="text" name="" id="password" placeholder="Apellido...">
+                     <input type="text" id="password" placeholder="Apellido...">
                   </div>
                </form>
                <div id="submit">
@@ -64,8 +88,8 @@ const callback = (response) => {
                </div>
                <div id="google-log">
                   <GoogleLogin :callback="callback" prompt auto-login />
-
                </div>
+               <button type="submit" form="form">Validar datos prueba</button>
             </div>
          </div>
          <div id="register"></div>
