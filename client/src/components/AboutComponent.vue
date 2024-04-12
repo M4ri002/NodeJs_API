@@ -1,6 +1,4 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useI18nStore } from '@/stores/i18n.js'
 import HeaderTeo from '@/components/HeaderTeo.vue'
 import Section1 from '@/components/AboutSection1.vue'
 import Section2 from '@/components/AboutSection2.vue'

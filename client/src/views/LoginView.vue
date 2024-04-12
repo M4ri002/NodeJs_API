@@ -1,6 +1,6 @@
 <script setup>
 import HeaderComponent from '@/components/HeaderComponent.vue'
-import login from '@/components/login.vue'
+import login from '@/components/Login.vue';
 import MapBox from '@/components/mapbox.vue';
 import bgImage from '@/assets/img/bg-login.jpg'
 </script>

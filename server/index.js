@@ -121,7 +121,7 @@ app.post('/register', (req, res) => {
 
 app.get('/', VueLoad);
 app.get('/login', VueLoad);
-// app.get('/bienvenido', controlSession, VueLoad);
+app.get('/about', VueLoad);
 app.get('/bienvenido', (req, res) => {
     console.log("ME HAN HECHO UN GET A BIENVENIDO");
     VueLoad(req, res); // Llama a VueLoad con los parámetros req y res
