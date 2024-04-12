@@ -1,34 +1,33 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import login from '../views/LoginView.vue'
-import bienvenido from '../views/Bienvenido.vue'
+// Aqui se manejan el routeo de las paginas, redireccions, etc
+import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue'; //Ruta del componente que se mostrará
+import test from '@/views/test.vue';
+import login from '@/views/loginView.vue';
+// import googletest from '@/views/GoogleTest.vue'; 
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL), //SUDA
   routes: [
     {
-      path: '/',
-      name: 'home',
-      component: HomeView
+      path: '/', //asi se llama la ruta de la home 
+      name: 'home', //nombre con el que identificamos la ruta
+      component: HomeView //nombre del componente que cargará al ir a la ruta
+    },
+    {
+      path: '/test',
+      name: 'test',
+      component: test
     },
     {
       path: '/login',
       name: 'login',
       component: login
     },
-    {
-      path: '/bienvenido',
-      name: 'bienvenido',
-      component: bienvenido
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue')
-    }
+    // {
+    //   path: '/googletest',
+    //   name: 'googletest',
+    //   component: googletest
+    // },
   ]
 })
 
