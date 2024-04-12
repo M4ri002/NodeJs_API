@@ -1,7 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import HeaderTeo from '@/components/HeaderTeo.vue'
+import Header from '@/components/HeaderComponent.vue'
 import Section1 from '@/components/AboutSection1.vue'
 import Section2 from '@/components/AboutSection2.vue'
 import Section3 from '@/components/AboutSection3.vue'
@@ -33,7 +33,7 @@ checkSession();
 </script>
 <template>
   <section class="allComponents">
-    <HeaderTeo/>
+    <Header/>
     <Section1/>
     <Section2/>
     <Section3 type="0"/>

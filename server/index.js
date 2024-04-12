@@ -5,6 +5,8 @@ const cookieParser = require('cookie-parser');
 const userController = require('./controllers/userController.js');
 const { VueLoad } = require('./routes/routes.js')
 
+// Use plugin with optional defaults
+
 const { generateSHA512Hash, exactDate } = require('./utils/tools.js');
 
 const app = express();
@@ -12,7 +14,13 @@ const PORT = 5173;
 
 // Configura Express para servir archivos estáticos desde el directorio 'dist'
 const staticPath = '../dist';
-app.use(express.static(staticPath));
+app.use(express.static(staticPath, {
+    setHeaders: function (res, path) {
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+    }
+}));
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
@@ -122,6 +130,7 @@ app.post('/register', (req, res) => {
 app.get('/', VueLoad);
 app.get('/login', VueLoad);
 app.get('/about', VueLoad);
+app.get('/options', VueLoad);
 app.get('/bienvenido', (req, res) => {
     console.log("ME HAN HECHO UN GET A BIENVENIDO");
     VueLoad(req, res); // Llama a VueLoad con los parámetros req y res

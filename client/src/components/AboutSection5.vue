@@ -14,7 +14,7 @@ const data = computed(() => dataStore.get('', i18n.language))
 <template>
     <div>
         <section class="sec5">
-            <!-- content -->
+            <p>content available in future versions</p>
         </section>
     </div>
 </template>
@@ -32,9 +32,19 @@ const data = computed(() => dataStore.get('', i18n.language))
         width: 100%;
         position: relative;
         z-index: 1;
-        height: 70vh;
+        height: 70vw;
         background: #F3ECE9;
         display: flex;
         border-bottom: 1px solid black;
+        // delete
+        justify-content: center;
+        align-items: center;
+    }
+
+    @media screen and (max-width: 600px)
+    {
+        section.sec5{
+            height: 90vw;
+        }
     }
 </style>

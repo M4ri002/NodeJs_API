@@ -103,7 +103,7 @@ function toggleMenu() {
    transition: height .5s ease;
    transition-delay: .4s;
    position: absolute;
-   z-index: 2;
+   z-index: 5;
    background-color: rgb(67, 67, 86);
    box-shadow: 0 0 0 0 black;
    height: 0vh;

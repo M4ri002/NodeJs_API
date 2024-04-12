@@ -45,11 +45,11 @@ const data = computed(() => dataStore.get('footerTeo', i18n.language))
     }
 
     footer{
-        width: 100%;
+        // width: 100%;
         position: relative;
         z-index: 1;
-        height: 14vh;
-        padding: 25px;
+        height: 5vh;
+        padding: 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -58,9 +58,6 @@ const data = computed(() => dataStore.get('footerTeo', i18n.language))
             p{
                 font-size: 13px;
             }
-        }
-        .col2{
-            
         }
     }
 </style>

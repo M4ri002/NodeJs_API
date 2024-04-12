@@ -1,9 +1,10 @@
 // Aqui se manejan el routeo de las paginas, redireccions, etc
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue'; //Ruta del componente que se mostrará
-import about from '@/views/AboutView.vue';
 import test from '@/views/test.vue';
+import about from '@/views/AboutView.vue'; 
 import login from '@/views/LoginView.vue';
+import options from '@/views/OptionsView.vue';
 // import googletest from '@/views/GoogleTest.vue'; 
 
 const router = createRouter({
@@ -34,6 +35,11 @@ const router = createRouter({
     //   name: 'googletest',
     //   component: googletest
     // },
+    {
+      path: '/options',
+      name: 'options',
+      component: options
+    }
   ]
 })
 

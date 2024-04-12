@@ -1,12 +1,12 @@
 <script setup>
 //imports
-import AboutComponent from '@/components/AboutComponent.vue' 
+import OptionsComponent from '@/components/OptionsComponent.vue' 
 
 </script>
 <template>
   <main class="container-fluid">
     <div>
-      <AboutComponent/>
+      <OptionsComponent/>
     </div>
   </main>
 </template>

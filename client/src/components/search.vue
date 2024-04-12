@@ -4,10 +4,17 @@ import box from '@/assets/img/box.png';
 import { ref, computed, onMounted } from 'vue'
 import { useI18nStore } from '@/stores/i18n.js'
 import { useDataStore } from '@/stores/data.js'
+import { useRouter } from 'vue-router';
+import { useVarStore } from '@/stores/var.js'
 const i18n = useI18nStore();
 const Screen = ref(null);
 const size = ref(false);
 const data = computed(() => useDataStore().get('search', i18n.language));
+const router = useRouter();
+const varStore = useVarStore();
+
+//-----------------------------------
+const destinyValue = ref('');
 
 onMounted(() => {
     Screen.value = window.innerWidth;
@@ -26,14 +33,26 @@ window.addEventListener('resize', () => {
         size.value = false;
     }
 });
+
+
+//redirect
+const redirectToOptions = () => {
+    // var content_destiny = 
+    varStore.changeVar('destiny', destinyValue.value)
+    setTimeout(() => {
+        //animacion de carga rapida pa q no sae tan seco
+        router.push('/options');
+}, 1300);
+    };
+
 </script>
 
 <template>
     <div id="content">
         <div id="box" :class="{ 'fit-area': size }">
             <img id="arrow" :src="arrow" alt="flecha">
-            <input type="text" name="" id="txt" :placeholder="data.txt1" />
-            <div id="generate" :class="{ 'fit': size }">
+            <input type="text" v-model="destinyValue" name="" id="txt" :placeholder="data.txt1" />
+            <div id="generate" :class="{ 'fit': size }" @click="redirectToOptions">
                 <p v-html="data.txt2" v-if="!size && Screen >= 600"></p><img id="imgbox" :src="box" alt="cubo">
             </div>
         </div>
