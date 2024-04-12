@@ -1,0 +1,11 @@
+{
+  "languages": ["es", "en"],
+  "dictionary": [
+    ["Sección 1", "Section 1"],
+    ["Sección 2", "Section 2"],
+    ["Sección 3", "Section 3"],
+    ["es-fot-1", "en-fot-1"],
+    ["es-fot-2", "en-fot-2"],
+    ["es-fot-3", "en-fot-3"]
+  ]
+}
