@@ -15,7 +15,8 @@ import bgImage from '@/assets/img/bg-login.jpg'
 
 <style lang="scss" scoped>
 #body{
-    // background-color: white;
+    margin: auto;
+    display: flex;
     height: 100vh;
     width: 100%;
     background-image: url('@/assets/img/bg-login.jpg');

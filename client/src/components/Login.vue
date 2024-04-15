@@ -6,286 +6,315 @@ import axios from 'axios';
 
 const mail = ref('');
 const password = ref('');
+const passwordType = ref('');
+const TitleText = ref('Inicio de sesión');
 const router = useRouter();
+const dynamicImage = ref(null); //URL IMAGEN OJO
 const change = ref(false);
-const isAnimating = ref(false);
-const text = ref("Iniciar Sesión");
-var rootElement = document.documentElement;
-var AnimationTime = 0.5; //Aqui ponemos la velocidad de la animación
-rootElement.style.setProperty('--AnimationTime', AnimationTime + 's'); //Esto es para poder poner una variable de js en css
+const changeImageSource = () => {
+   if (dynamicImage.value) {
+      let src = dynamicImage.value.src;
+      let type = passwordType.value.type;
+      dynamicImage.value.src = src.includes('ver.png') ? dynamicImage.value.src = 'src/assets/img/oculto.png' : dynamicImage.value.src = 'src/assets/img/ver.png';
+      type === 'password' ? passwordType.value.type = 'text' : passwordType.value.type = 'password';
+   }
+};
 
-const titleClasses = computed(() => ({
-   'animate__animated': true,
-   'animate__flipOutX': isAnimating.value,
-   'animate__flipInX': !isAnimating.value
-}));
+const toggleChange = (state) => {
+   let currentState = change.value;
+   currentState === state ? login() : change.value = state;
+   !state ? TitleText.value = 'Inicio de sesión' : TitleText.value = 'Registrate';
+};
 
-function toggle(val) {
-   change.value = val;
-   isAnimating.value = true;
-   setTimeout(() => {
-      isAnimating.value = false;
-   }, AnimationTime * 1000);
-   setTimeout(() => {
-      val ? text.value = "Registrarse" : text.value = "Iniciar Sesión";
-   }, AnimationTime * 1000);
-}
 
+const submitForm = () => {
+   console.log("Enviado");
+   // login(); // Llamar al método login para enviar el formulario
+};
+
+//------------------------- GOOGLE -------------------------------
 const callback = (response) => {
-   // decodeCredential will retrive the JWT payload from the credential
    const userData = decodeCredential(response.credential)
    console.log("Handle the userData", userData)
 }
+//----------------------------------------------------------------
+
 
 const login = async () => {
-  try {
-    const response = await axios.post('/server/login', { mail: mail.value, password: password.value });
-    console.log("Log client login => ",response);
-    if (response.status === 200) {
-      router.push('/about'); // Redirige al usuario a la página de inicio
-    } else if (response.status === 401) {
-      console.log('La sesión ha caducado, redirigiendo al formulario de inicio de sesión...');
-      router.push('/login'); // Redirige al usuario al formulario de inicio de sesión
-    } else {
-      console.error('Inicio de sesión fallido:', response.data.message);
-      // Manejar otros casos de inicio de sesión fallido
-    }
-  } catch (error) {
-    console.error('Error al iniciar sesión:', error);
-    // Manejar errores de red o del servidor
-  }
+   try {
+      const response = await axios.post('/server/login', { mail: mail.value, password: password.value });
+      console.log("Log client login => ", response);
+      if (response.status === 200) {
+         router.push('/about'); // Redirige al usuario a la página de inicio
+      } else if (response.status === 401) {
+         console.log('La sesión ha caducado, redirigiendo al formulario de inicio de sesión...');
+         router.push('/login'); // Redirige al usuario al formulario de inicio de sesión
+      } else {
+         console.error('Inicio de sesión fallido:', response.data.message);
+         // Manejar otros casos de inicio de sesión fallido
+      }
+   } catch (error) {
+      console.error('Error al iniciar sesión:', error);
+      // Manejar errores de red o del servidor
+   }
 };
 </script>
 <!-- VOLVER A CREAR LOGIN (MEJOR HECHO) -->
 <template>
-   <div>
-      <div id="section">
+   <div id="section">
+      <div id="content" :class="{ 'change-class': change }">
+         <h1>{{ TitleText }}</h1>
          <div id="login">
-            <div id="content" :class="{ 'animate-content': change }">
-               <div id="title">
-                  <h1 :class="titleClasses">
-                     {{ text }}
-                  </h1>
-               </div>
-               <form @submit.prevent="login" id="form" :class="{ 'form-Animation': change }">
-                  <div class="input-line">
-                     <input type="email" id="email" placeholder="Email..." v-model="mail" required>
-                  </div>
-                  <div class="input-line">
-                     <input type="password" id="password" placeholder="Contraseña..." v-model="password" required>
-                  </div>
-                  <div class="input-line regist">
-                     <input type="text" id="password" placeholder="Nombre...">
-                  </div>
-                  <div class="input-line regist">
-                     <input type="text" id="password" placeholder="Apellido...">
-                  </div>
-               </form>
-               <div id="submit">
-                  <button type="submit" id="regis" form="form" @click.prevent="toggle(true)">Registrarse</button>
-                  <button type="submit" id="log" form="form" @click.prevent="toggle(false)">Inciar sesión</button>
-                  <div class="colorbox" :class="{ 'colorbox-tranform': change }"></div>
-               </div>
+            <form method="post" @submit.prevent="login" id="form" >
                <div id="google-log">
                   <GoogleLogin :callback="callback" prompt auto-login />
                </div>
-               <button type="submit" form="form">Validar datos prueba</button>
-            </div>
+               <div id="divider">
+                  <div id="divider-text">0</div>
+               </div>
+               <div id="campo1">
+                  <label for="form">Dirección de correo electrónico*</label>
+                  <div id="input-container">
+                     <input type="text" name="name" id="" placeholder="Email@email.com" v-model="mail" required>
+                  </div>
+               </div>
+               <div id="campo2">
+                  <label for="form">Contraseña*</label>
+                  <div id="input-container">
+                     <input type="password" name="password" ref="passwordType" placeholder="Contraseña" v-model="password" required>
+                     <img src="@/assets/img/oculto.png" alt="" id="eye" @click="changeImageSource" ref="dynamicImage">
+                  </div>
+               </div>
+               <div id="campo3">
+                  <label for="form">Nombre*</label>
+                  <div id="input-container">
+                     <input type="text" name="name" id="name" placeholder="Nombre">
+                  </div>
+               </div>
+               <div id="campo4">
+                  <label for="form">Apellidos</label>
+                  <div id="input-container">
+                     <input type="text" name="surname" id="surname" placeholder="Apellidos">
+                  </div>
+               </div>
+               <div id="submit">
+                  <button type="submit" id="regis" form="form" @click.prevent="toggleChange(true)">Registrarse</button>
+                  <button type="submit" id="log" form="form" @click.prevent="toggleChange(false)">Inciar sesión</button>
+                  <button class="colorbox" @click="submitForm"></button>
+               </div>
+            </form>
          </div>
-         <div id="register"></div>
       </div>
    </div>
 </template>
 
 
 <style lang="scss" scoped>
-.animate-content {
-   max-height: 500px !important;
-}
+.change-class{
+   height: 640px!important;
+   transition: height .3s ease!important;
 
-.animate__animated {
-   --animate-duration: var(--AnimationTime);
-}
+   h1{
+      // transform: rotateX(90deg);
+   }
 
-.form-Animation {
-   height: 265px !important;
-   transition-delay: .2s !important;
-
-   .regist {
-      transform: translateX(0px) !important;
-      transition-delay: .3s !important;
+   #campo3{
+      transform: translateX(0px)!important;
+      transition: transform .5s ease .1s!important;
+      // display: block!important;
+   }
+   #campo4{
+      transform: translateX(0px)!important;
+      transition: transform .5s ease .2s!important;
+   }
+   #submit{
+      transform: translateY(0px)!important;
+      transition: transform .5s ease !important; // 0.5s de delay
 
    }
-}
+   .colorbox{
+      left: 0!important;
+      background-color: #4969b4!important;
+      box-shadow: 5px 0px 7px -1px rgba(0, 0, 0, 0.631372549) !important;
+   }
 
-.colorbox-tranform {
-   left: 0% !important;
-   background-color: #3D5998 !important;
-   box-shadow: 5px 0px 7px -1px rgba(0, 0, 0, 0.631372549) !important;
 }
 
 #section {
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   width: 100%;
-   height: 100vh;
-   position: relative;
-   background-color: rgba(0, 0, 0, 0.142);
-   z-index: 1;
+   width: clamp(300px, 70vw, 600px); // ANCHO DEL LOGIN
+   margin: 100px auto 0;
 
-   #login {
-      padding: 80px 20px;
-      width: 400px;
-      border-radius: 10px;
-      position: relative;
-      box-shadow: 0 0 12px -3px #00000084;
-      background-color: #efefeff4;
+   #content {
+      background-color: rgb(255, 255, 251);
+      height: 550px; // ALTURA DEL LOGIN 
+      border-radius: 20px;
+      box-shadow: 3px 5px 11px -5px black;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      transition: height .3s ease .3s;
       overflow: hidden;
 
-      #content {
-         width: 90%;
-         margin: auto;
+      h1 {
+         margin: 30px 0;
+         // transition: transform .5s ease;
+      }
+
+      #login {
          height: 100%;
-
-         #title {
-            text-align: center;
-            position: relative;
-            transition: transform .3s ease, opacity .2s ease;
-
-            h1 {
-               // padding: 60px 0 0 0;
-               color: #333333;
-               font-size: 50px;
-               font-weight: bold;
-            }
-         }
+         width: 100%;
+         display: flex;
+         align-items: center;
 
          #form {
-            text-align: center;
-            margin: 0 0 60px 0;
-            position: relative;
-            height: 100px;
-            transition: height .3s ease;
-            transition-delay: .3s;
+            width: 80%;
+            margin: 0 auto;
 
-            &:after {
-               content: '';
-               background-color: rgb(164, 126, 36);
-               width: 100%;
-               height: 2px;
-               position: absolute;
-               top: -20px;
-               left: 0;
-            }
+            #campo1,
+            #campo2,
+            #campo3,
+            #campo4 {
+               margin: 20px 0;
 
-            .regist {
-               transform: translateX(150%);
-               transition: .3s ease;
-            }
+               label {
+                  display: block;
+                  color: #676767;
+                  font-weight: 300;
+                  margin: 5px 0;
+               }
 
-            .input-line {
-               background: rgb(231, 189, 138);
-               box-shadow: inset 0 0 0 2px rgb(201, 134, 0);
-               // background: linear-gradient(180deg, #6e6e6e 0%, #828282 56%, #a1a1a1 100%);
-               margin: 40px 0 0 0;
-               border: 1px solid rgba(255, 255, 255, 0.708);
-               height: 40px;
-               border-radius: 13px;
-               display: flex;
-               justify-content: center;
-               align-items: center;
+               #input-container {
+                  width: 100%;
+                  display: flex;
+                  background-color: white;
+                  border: 1px solid #676767;
+                  border-radius: 3px;
+                  align-items: center;
 
-               input {
-                  width: 80%;
-                  height: 100%;
-                  border: none;
-                  background-color: transparent;
-                  font-size: 18px;
-                  color: #000000;
-                  outline: none;
+                  input {
+                     width: 100%;
+                     background-color: transparent;
+                     border: none;
+                     padding: 10px 15px;
 
-                  &::placeholder {
-                     font-weight: 100;
+                     &:focus {
+                        outline: none;
+                        background-color: rgb(239, 239, 239);
+                     }
+                  }
+
+                  #eye {
+                     width: 25px;
+                     height: 25px;
+                     margin-right: 5px;
+                     opacity: .5;
+
+                     &:hover {
+                        cursor: pointer;
+                     }
                   }
                }
             }
-
-
-         }
-
-         #submit {
-            background: rgb(92, 99, 110);
-            // background: linear-gradient(180deg, rgba(52, 61, 73, 1) 0%, rgba(50, 61, 73, 1) 56%, rgba(37, 45, 52, 1) 100%);
-            border: 1px solid rgb(0, 0, 0);
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            // overflow: hidden;
-            align-items: center;
-            position: relative;
-
-            &:before {
-               content: '';
-               background-color: rgb(164, 126, 36);
-               width: 100%;
-               height: 2px;
-               position: absolute;
-               top: -20px;
-               left: 0;
+            #campo3,
+            #campo4{
+               // display: none;
+               transition: transform .3s ease;
+               transform: translateX(600px);
+               // transition: transform .3s ease .3s; // 0.3s de delay
+               
             }
 
-            button {
-               border: none;
-               height: 100%;
-               width: 50%;
-               font-size: 15px;
-               color: white;
+            #divider {
+               display: block;
+               margin: 1.5rem 0 1rem;
+               position: relative;
+               text-align: center;
 
-               &:hover {
-                  cursor: pointer;
+               &::before {
+                  background-color: #b5b3ad;
+                  content: "";
+                  height: .0625rem;
+                  left: 0;
+                  position: absolute;
+                  top: 50%;
+                  width: 100%;
+               }
+
+               #divider-text {
+                  background-color: rgb(238, 238, 230);
+                  color: #2e2e2e;
+                  display: inline-block;
+                  margin: 0 2.5rem;
+                  padding: 0 .5rem;
+                  position: relative;
+                  font-size: 20px;
+                  font-weight: 600;
                }
             }
 
-            #log {
-               background-color: transparent;
-               z-index: 1;
-
-            }
-
-            #regis {
-               z-index: 1;
-               background-color: transparent;
-            }
-
-            .colorbox {
-               transition: .5s ease;
-               width: 50%;
-               background-color: #228B22;
+            #submit {
+               background: rgb(92, 99, 110);
+               border: .5px solid rgb(50, 50, 50);
+               height: 50px;
                border-radius: 10px;
-               left: 50%;
-               top: 0;
-               height: 100%;
-               position: absolute;
-               box-shadow: -5px 0px 7px 2px #000000a1;
+               display: flex;
+               justify-content: center;
+               align-items: center;
+               position: relative;
+               overflow: hidden;
+               margin: 40px 0;
+               transform: translateY(-150px);
+               transition: transform .3s ease .3s; // 0.3s de delay
+               button {
+                  border: none;
+                  height: 100%;
+                  width: 50%;
+                  font-size: 15px;
+                  color: white;
+                  
+                  &:hover {
+                     cursor: pointer;
+                  }
+               }
 
+               #log {
+                  background-color: transparent;
+                  z-index: 1;
+                  border-radius: 10px;
+                  transition: background-color .5s;
+               }
+
+               #regis {
+                  z-index: 1;
+                  background-color: transparent;
+                  border-radius: 10px;
+                  transition: background-color .5s;
+               }
+
+               .colorbox {
+                  transition: .5s ease;
+                  width: 50%;
+                  background-color: #228B22;
+                  border-radius: 10px;
+                  left: 50%;
+                  top: 0;
+                  height: 100%;
+                  position: absolute;
+                  box-shadow: -5px 0px 7px 2px #000000a1;
+               }
             }
-         }
-
-         #google-log {
-            background-color: rgb(201, 134, 0);
-            border-radius: 5px;
-            height: 40px;
-            width: 40%;
-            margin: 20px auto 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 10px;
-            box-shadow: 2px 2px 5px -1px black;
          }
       }
+
+
    }
+}
+
+#google-log {
+   border-radius: 5px;
+   align-items: center;
+   justify-content: center;
+   padding: 0 10px;
+   display: flex;
 }
 </style>

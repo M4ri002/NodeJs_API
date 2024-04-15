@@ -5,9 +5,6 @@ localStorage.language = "es"; //Idioma por defecto
 </script>
 <template>
     <RouterView />
-    <!-- <RouterLink to="/login">Login</RouterLink> -->
-    <RouterView />
-
 </template>
 <style lang="scss">
 @import "@/css/styles.scss";
