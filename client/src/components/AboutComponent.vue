@@ -18,6 +18,8 @@ const checkSession = async () => {
         console.log("Log client bienvenido=> ",response);
         if (response.status === 200) {
             router.push('/about'); // Redirige al usuario a la página de inicio
+        } else if (response.status === 500){
+          router.push('/login');
         }
     } catch (error) {
         console.error('Error al iniciar sesión:', error);

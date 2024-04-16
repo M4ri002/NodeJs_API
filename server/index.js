@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const userController = require('./controllers/userController.js');
-const { VueLoad } = require('./routes/routes.js')
+const { VueLoad } = require('./routes/routes.js');
 
 // Use plugin with optional defaults
 
@@ -12,15 +12,9 @@ const { generateSHA512Hash, exactDate } = require('./utils/tools.js');
 const app = express();
 const PORT = 5173;
 
-// Configura Express para servir archivos estáticos desde el directorio 'dist'
-const staticPath = '../dist';
-app.use(express.static(staticPath, {
-    setHeaders: function (res, path) {
-        if (path.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css');
-        }
-    }
-}));
+const staticPath = path.join(__dirname, '../dist');
+
+app.use(express.static(staticPath));
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
@@ -28,6 +22,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.listen(PORT, () => console.log(`http://localhost:${PORT} levantado`));
+
 
 app.get('/session', (req, res) => {
     const hash = req.cookies.Expire;

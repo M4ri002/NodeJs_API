@@ -10,11 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "@types/mapbox-gl": "^3.1.0",
     "axios": "^1.6.8",
     "mapbox-gl": "^3.3.0",
     "nodejs_api": "file:..",
     "pinia": "^2.1.7",
+    "v-calendar": "^3.1.2",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
     "vue3-google-login": "^2.0.26"

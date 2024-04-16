@@ -5,6 +5,7 @@ import { useDataStore } from '@/stores/data.js'
 import { useVarStore } from '@/stores/var.js'
 import { DatePicker } from 'v-calendar';
 // import { create } from 'cypress/types/lodash';
+import 'v-calendar/dist/style.css'; //HAY QUE LLAMAR ASI A LOS ESTILOS
 
 const i18n = useI18nStore();
 const data = computed(() => useDataStore().get('search', i18n.language));
